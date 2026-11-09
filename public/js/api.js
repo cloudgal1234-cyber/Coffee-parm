@@ -34,22 +34,35 @@ export const api = {
 
   getOrder: (id) => request('GET', `/api/orders/${encodeURIComponent(id)}`),
 
-  /** Live status for one order. Returns an unsubscribe function. */
-  watchOrder(id, onStatus) {
-    const es = new EventSource(`/api/stream?order=${encodeURIComponent(id)}`);
-    es.addEventListener('status', (e) => onStatus(JSON.parse(e.data)));
-    return () => es.close();
+  /**
+   * Live status for one order (polling — works on serverless hosts like Vercel).
+   * Returns an unsubscribe function.
+   */
+  watchOrder(id, onStatus, everyMs = 4000) {
+    let stopped = false;
+    let last = null;
+    async function tick() {
+      if (stopped) return;
+      try {
+        const { order } = await api.getOrder(id);
+        if (order.status !== last) {
+          last = order.status;
+          onStatus(order);
+        }
+      } catch { /* network hiccup — try again next tick */ }
+      if (!stopped && !['done', 'cancelled'].includes(last)) setTimeout(tick, document.hidden ? everyMs * 3 : everyMs);
+    }
+    tick();
+    return () => { stopped = true; };
   },
 
   /* ---- staff ---- */
   admin(pin) {
     const h = pin ? { 'X-Admin-Pin': pin } : {};
-    const q = pin ? `?pin=${encodeURIComponent(pin)}` : '';
     return {
       check: () => request('GET', '/api/admin/check', null, h),
       list: () => request('GET', '/api/admin/orders', null, h),
       setStatus: (id, status) => request('PATCH', `/api/admin/orders/${encodeURIComponent(id)}`, { status }, h),
-      stream: () => new EventSource(`/api/admin/stream${q}`),
     };
   },
 };

@@ -156,33 +156,39 @@ window.addEventListener('focus', () => { unseen = 0; render(); });
 function setLive(state) {
   const el = $('#live');
   el.className = 'live ' + state;
-  el.lastElementChild.textContent = state === 'on' ? 'מחובר בזמן אמת' : 'מתחבר מחדש…';
+  el.lastElementChild.textContent = state === 'on' ? 'מתעדכן אוטומטית' : 'אין חיבור — מנסה שוב…';
 }
 
+let firstLoad = true;
 async function reload() {
   const { orders: list } = await client.list();
+  const incoming = list.filter((o) => !orders.has(o.id));
   orders = new Map(list.map((o) => [o.id, o]));
+  if (!firstLoad && incoming.length) {
+    incoming.forEach((o) => {
+      freshIds.add(o.id);
+      setTimeout(() => freshIds.delete(o.id), 4000);
+    });
+    if (!document.hasFocus()) unseen += incoming.length;
+    beep();
+  }
+  firstLoad = false;
   render();
 }
 
+const POLL_MS = 3000;
 function connect() {
-  const es = client.stream();
-  es.onopen = () => { setLive('on'); reload().catch(() => {}); }; // resync after reconnect
-  es.onerror = () => setLive('off');
-  es.addEventListener('order:new', (e) => {
-    const o = JSON.parse(e.data);
-    orders.set(o.id, o);
-    freshIds.add(o.id);
-    setTimeout(() => freshIds.delete(o.id), 4000);
-    if (!document.hasFocus()) unseen++;
-    beep();
-    render();
-  });
-  es.addEventListener('order:update', (e) => {
-    const o = JSON.parse(e.data);
-    orders.set(o.id, o);
-    render();
-  });
+  // Polling (works on serverless hosts). New orders appear within ~3 seconds.
+  const loop = async () => {
+    try {
+      await reload();
+      setLive('on');
+    } catch {
+      setLive('off');
+    }
+    setTimeout(loop, POLL_MS);
+  };
+  setTimeout(loop, POLL_MS);
 }
 
 function tick() {
@@ -198,6 +204,7 @@ async function start(pin) {
   tick();
   setInterval(() => { tick(); render(); }, 30_000); // refresh "waiting X min"
   await reload();
+  setLive('on');
   connect();
 }
 

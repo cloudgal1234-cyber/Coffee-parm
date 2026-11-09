@@ -12,7 +12,7 @@
 דרוש Node.js 18 ומעלה. אין תלויות להתקנה.
 
 ```bash
-npm start            # או: node server.js
+npm start            # או: node server/local.js
 # אתר:   http://localhost:3000/
 # ניהול: http://localhost:3000/main
 ```
@@ -24,13 +24,17 @@ npm start            # או: node server.js
 | `PORT` | `3000` | פורט השרת |
 | `ADMIN_PIN` | — | קוד גישה למסך `/main`. **מומלץ מאוד להגדיר באתר אמיתי** |
 | `PAYMENT_PROVIDER` | `mock` | ספק הסליקה (ראו למטה) |
-| `DATA_DIR` | `./data` | היכן נשמר קובץ ההזמנות |
+| `DATA_DIR` | `./data` | היכן נשמר קובץ ההזמנות (כשאין Redis) |
+| `KV_REST_API_URL` + `KV_REST_API_TOKEN` | — | Redis (Upstash). **חובה ב-Vercel** — נוצרים אוטומטית בחיבור Upstash |
 
 ## מבנה הפרויקט
 
 ```
-server.js                    שרת: קבצים סטטיים + API + עדכונים בזמן אמת (SSE)
-server/store.js              שמירת הזמנות (קובץ JSON — אפשר להחליף ל-DB)
+api/index.js                 נקודת הכניסה ל-Vercel (serverless)
+vercel.json                  הגדרות Vercel
+server/api.js                ה-API (משותף ל-Vercel ולהרצה מקומית)
+server/local.js              שרת מקומי: קבצים סטטיים + API
+server/store.js              שמירת הזמנות: Redis (Upstash) או קובץ JSON מקומי
 server/payments/index.js     בחירת ספק סליקה
 server/payments/mock-provider.js   סליקה מדומה
 public/index.html            אתר הלקוחות
@@ -47,7 +51,7 @@ public/assets/               לוגו ותמונת רקע (אפשר להחליף
 
 ## עדכון התפריט
 
-עורכים את `public/data/menu.json` — אין צורך באתחול השרת.
+עורכים את `public/data/menu.json` (בהרצה מקומית צריך להפעיל את השרת מחדש).
 - פריט עם מחיר אחד: `"price": 14`
 - פריט עם גדלים: `"sizes": [{ "id": "small", "label": "קטן", "price": 16 }, ...]`
 - תוספות/בחירות: מגדירים קבוצה ב-`optionGroups` ומוסיפים את המזהה שלה ל-`"options"` של הפריט
@@ -79,8 +83,8 @@ public/assets/               לוגו ותמונת רקע (אפשר להחליף
    };
    ```
 2. רשמו אותו ב-`server/payments/index.js`.
-3. הוסיפו ב-`server.js` נתיב webhook (למשל `POST /api/payments/callback`) שקורא ל-`verifyCallback`
-   ומעדכן את ההזמנה מ-`pending_payment` ל-`new` + `broadcast('order:new', order)`.
+3. הוסיפו ב-`server/api.js` נתיב webhook (למשל `POST /api/payments/callback`) שקורא ל-`verifyCallback`
+   ומעדכן את ההזמנה מ-`pending_payment` ל-`new`.
 4. הסירו את שדות האשראי מטופס התשלום ב-`app.js` — אצל ספק אמיתי הלקוח מזין את הכרטיס
    בדף/בשדות המאובטחים של הספק (כך אתם לא נדרשים לעמוד ב-PCI בעצמכם).
 5. הריצו עם `PAYMENT_PROVIDER=payplus` ומפתחות ה-API במשתני סביבה.
@@ -93,12 +97,17 @@ public/assets/               לוגו ותמונת רקע (אפשר להחליף
 - צליל והבהוב כשנכנסת הזמנה חדשה (לחצו פעם אחת על המסך כדי שהדפדפן יאפשר צליל)
 - הזמנה שממתינה יותר מ-10 דקות מסומנת באדום
 - הערות לפריט מודגשות בסגול, הערה כללית בצהוב
-- הלקוח רואה את סטטוס ההזמנה שלו מתעדכן בזמן אמת (כולל רטט כשהיא מוכנה)
+- המסך מתעדכן אוטומטית כל 3 שניות; הלקוח רואה את הסטטוס שלו מתעדכן (כולל רטט כשההזמנה מוכנה)
 - סטטיסטיקה יומית: הזמנות פתוחות, כמות והכנסות; מספרי ההזמנות מתאפסים כל יום ל-101
 
-## פריסה
+## פריסה ל-Vercel
 
-כל שירות שמריץ Node מתאים (Render, Railway, Fly.io, VPS). שימו לב:
-- נדרש שרת שרץ ברציפות (בגלל העדכונים בזמן אמת), ולא פונקציות serverless
-- הגדירו `ADMIN_PIN`
-- ודאו שתיקיית `DATA_DIR` נשמרת בין הפעלות (volume), או החליפו את `store.js` במסד נתונים
+1. מחברים את הריפו ב-Vercel (Framework Preset: **Other**, בלי Build Command). `vercel.json` כבר מגדיר הכול.
+2. **חיבור מסד נתונים (חובה):** בפרויקט ב-Vercel → **Storage** → **Create Database** → **Upstash for Redis**
+   (יש תוכנית חינמית) → **Connect** לפרויקט. זה יוצר אוטומטית את `KV_REST_API_URL` ו-`KV_REST_API_TOKEN`.
+3. **Settings → Environment Variables** → מוסיפים `ADMIN_PIN` (קוד לכניסה ל-`/main`).
+4. **Deployments** → על הפריסה האחרונה → **Redeploy** (כדי שהמשתנים ייכנסו לתוקף).
+
+בלי Redis האתר והתפריט עובדים, אבל שליחת הזמנה תחזיר הודעה שמסד הנתונים לא מחובר.
+
+אפשר גם להריץ על כל שרת Node רגיל (Render, Railway, VPS) עם `npm start` — שם, בלי Redis, ההזמנות נשמרות בקובץ ב-`DATA_DIR`.
