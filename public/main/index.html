@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2f2118" />
+  <meta name="robots" content="noindex" />
+  <title>ניהול הזמנות · קפה רחל בצהלה</title>
+  <link rel="icon" href="/assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Frank+Ruhl+Libre:wght@700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body class="admin">
+  <!-- PIN gate (only shown when the server has ADMIN_PIN set) -->
+  <div class="pin-gate hidden" id="pinGate">
+    <form class="pin-card" id="pinForm">
+      <img src="/assets/logo.png" alt="" />
+      <h1 class="sheet-title">כניסת צוות</h1>
+      <label class="field"><span class="sr-only">קוד גישה</span>
+        <input class="input ltr" name="pin" type="password" inputmode="numeric" autocomplete="current-password" placeholder="קוד גישה" autofocus />
+      </label>
+      <div class="field-error" id="pinErr"></div>
+      <button class="btn btn-primary btn-block">כניסה</button>
+    </form>
+  </div>
+
+  <div id="app" class="hidden">
+    <header class="adm-head">
+      <img src="/assets/logo.png" alt="" />
+      <div>
+        <div class="adm-title">קפה רחל · הזמנות</div>
+        <div class="adm-sub"><span class="live" id="live"><i></i><span>מתחבר…</span></span> · <span id="clock"></span></div>
+      </div>
+      <div class="adm-stats">
+        <div class="stat"><b id="sOpen">0</b><small>פתוחות</small></div>
+        <div class="stat"><b id="sCount">0</b><small>היום</small></div>
+        <div class="stat"><b id="sRevenue">₪0</b><small>הכנסות</small></div>
+      </div>
+      <div class="adm-tools">
+        <button class="icon-btn" id="soundBtn" title="צליל להזמנה חדשה" aria-label="צליל">🔔</button>
+        <button class="icon-btn" id="fsBtn" title="מסך מלא" aria-label="מסך מלא">⛶</button>
+      </div>
+    </header>
+
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-tab="new">חדשות<b data-count="new">0</b></button>
+      <button class="tab" data-tab="preparing">בהכנה<b data-count="preparing">0</b></button>
+      <button class="tab" data-tab="ready">מוכנות<b data-count="ready">0</b></button>
+    </div>
+
+    <main class="board">
+      <section class="col active" data-col="new"><div class="col-head">חדשות <span class="n" data-count="new">0</span></div><div class="col-body"></div></section>
+      <section class="col" data-col="preparing"><div class="col-head">בהכנה <span class="n" data-count="preparing">0</span></div><div class="col-body"></div></section>
+      <section class="col" data-col="ready"><div class="col-head">מוכנות לאיסוף <span class="n" data-count="ready">0</span></div><div class="col-body"></div></section>
+    </main>
+
+    <details class="history">
+      <summary>הזמנות שהסתיימו היום (<span id="histCount">0</span>)</summary>
+      <table>
+        <thead><tr><th>#</th><th>שעה</th><th>שם</th><th>פריטים</th><th>סכום</th><th>סטטוס</th><th></th></tr></thead>
+        <tbody id="histBody"></tbody>
+      </table>
+    </details>
+  </div>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>

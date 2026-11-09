@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#2f2118" />
+  <title>קפה רחל בצהלה · הזמנה אונליין</title>
+  <meta name="description" content="קפה רחל בצהלה — חוות צהלה. קפה טוב, אווירה טובה. הזמינו מראש ואספו מהעגלה." />
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Frank+Ruhl+Libre:wght@700;900&family=Parisienne&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-img" role="img" aria-label="שביל בחווה עם סוסים בשקיעה"></div>
+    <div class="hero-brand">
+      <img class="hero-logo" src="assets/logo.png" alt="" />
+      <div class="hero-farm">• חוות צהלה •</div>
+      <h1 class="hero-title">קפה רחל בצהלה</h1>
+      <div class="hero-tag">טעם של טבע · קפה טוב, אווירה טובה</div>
+      <div class="hero-script">Coffee &amp; More</div>
+    </div>
+  </header>
+
+  <nav class="cat-nav" aria-label="קטגוריות">
+    <div class="cat-nav-inner" id="catNav"></div>
+  </nav>
+
+  <main class="menu" id="menu" aria-live="polite">
+    <p class="empty-state">טוען תפריט…</p>
+  </main>
+
+  <footer class="site-foot">חוות צהלה · נוסד תשע"א · האיסוף מהעגלה</footer>
+
+  <button class="cart-bar empty" id="cartBar" aria-label="פתיחת העגלה">
+    <span><span class="count" id="cartCount">0</span>לצפייה בעגלה</span>
+    <span id="cartTotal">₪0</span>
+  </button>
+
+  <div id="modalRoot"></div>
+
+  <script src="js/pricing.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
